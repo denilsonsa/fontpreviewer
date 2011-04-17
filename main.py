@@ -1,23 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: us-ascii -*-
 
-# Requirements:
-# - Python (d'oh!)
-#   - Tested with python-2.4.4
-# - SDL and SDL_ttf
-#   - Tested with libsdl-1.2.11 and sdl-ttf-2.0.8
-# - pygame compiled with font support (SDL_ttf)
-#   - Tested with pygame-1.7.1
-# - ImageMagick 'convert' tool available on system PATH
-#
-# Optional requirements:
-#  - FontTools (http://fonttools.sourceforge.net/)
-#    - Tested with fonttools-2.0_beta1
-
-# This program comes with "describe.py" file from TTFQuery-1.0.0 package.
-# http://ttfquery.sourceforge.net/
-
-
 import sys, getopt, os, os.path, subprocess, pygame
 from pygame.font import Font
 
