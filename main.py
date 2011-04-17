@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: us-ascii -*-
 
-import sys, getopt, os, os.path, subprocess, pygame
+import getopt
+import os.path
+import sys
+
+import pygame
 from pygame.font import Font
 
 try:
@@ -12,27 +16,19 @@ except ImportError:
     HAS_FONTTOOLS = False
 
 
-
-def render_font_to_file(fontfile, text, fontsize, antialias, background=None):
-    """From Font.render() documentation:
-  If antialiasing is not used, the return image will always be an 8bit image with a two color palette. If the background is transparent a colorkey will be set. Antialiased images are rendered to 24-bit RGB images. If the background is transparent a pixel alpha will be included.
-
-Note that current implementation is broken. The "background" parameter does not support None. You must either omit it, or pass a RGBA tuple.
-
-Note also that PNG support was (?) added in pygame-1.8 (but, as of 2007-08-08, 1.7.1 is the latest version, being released on 2005-08-16)."""
-
+def render_font_to_file(fontfile, text, fontsize, antialias=True, background=None):
     font = Font(fontfile, fontsize)
+
+    # Despite what the documentation implies, Font.render() does not support
+    # None as the "background" parameter. You must either omit it, or pass a
+    # RGBA tuple.
     if background == None:
         surf = font.render(text, antialias, (0,0,0))
     else:
         surf = font.render(text, antialias, (0,0,0), background)
-    tgafile = os.path.splitext(fontfile)[0] + ".tga"
-    pngfile = os.path.splitext(fontfile)[0] + ".png"
-    pygame.image.save(surf, tgafile)
-    subprocess.call(["convert",tgafile,pngfile])
-    # Note: os.unlink() is exactly the same as os.remove()
-    os.unlink(tgafile)
 
+    pngfile = os.path.splitext(fontfile)[0] + ".png"
+    pygame.image.save(surf, pngfile)
 
 
 class FontMetadata(object):
@@ -140,7 +136,7 @@ tr.second {
 
 
 def print_help():
-    print "Usage: %s [opts] <ttf font files>" % os.path.basename(sys.argv[0])
+    print "Usage: {0} [opts] <ttf font files>".format(os.path.basename(sys.argv[0]))
     print "Options:"
     print "  -s 48    Sets the font size (height) in pixels. (default=48)"
     print "  -a       Enables anti-aliasing. (default)"
@@ -149,14 +145,13 @@ def print_help():
     print "           (default=The Quick Brown Fox Jumped Over The Lazy Dog.)"
     if HAS_FONTTOOLS:
         print "  -o file  Writes a HTML page linking to all PNG images and including actual"
-        print "           font names. (use '-' to save to stdout)"
+        print "           font names. (use '-' to output to stdout)"
     print "  -h       Prints this help."
     print ""
-    print "This program will render each TTF file into a TGA file (in the same directory"
-    print "of the TTF file), then will convert TGA to PNG using ImageMagick 'convert'"
-    print "tool, and finally remove the TGA file."
+    print "This program will render each TTF file into a PNG file (in the same directory"
+    print "of the TTF file)."
     print ""
-    print "This program will ignore (skip) any invalid file (but will report any errors"
+    print "This program will ignore (skip) invalid files (but will report all errors"
     print "encountered)."
 
 

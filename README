@@ -13,7 +13,6 @@ Requirements:
   - Tested with libsdl-1.2.13 and sdl-ttf-2.0.10
 - pygame compiled with font support (SDL_ttf)
   - Tested with pygame-1.9.1
-- ImageMagick 'convert' tool available on system PATH
 
 Optional requirement (but recommended):
  - FontTools (http://fonttools.sourceforge.net/)
