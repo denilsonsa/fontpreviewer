@@ -10,8 +10,8 @@ from pygame.font import Font
 
 try:
     from fontTools import ttLib
+    from ttfquery import describe
     HAS_FONTTOOLS = True
-    import describe
 except ImportError:
     HAS_FONTTOOLS = False
 
@@ -156,7 +156,7 @@ tr.second {
                 filename=html(e.filename),
                 pngfilename=html(pngfilename),
                 weight=str(e.weight),
-                italic=e.italic,
+                italic=italic,
                 text=text
             )
         )
