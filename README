@@ -14,10 +14,9 @@ Requirements:
 - pygame compiled with font support (SDL_ttf)
   - Tested with pygame-1.9.1
 
-Optional requirement (but recommended):
+Optional requirements (but recommended):
  - FontTools (http://fonttools.sourceforge.net/)
    - Tested with fonttools-2.3
-
-This program comes with "describe.py" file from TTFQuery-1.0.0 package.
-http://ttfquery.sourceforge.net/
+ - TTFQuery (http://ttfquery.sourceforge.net/)
+   - Tested with ttfquery-1.0.4
 
