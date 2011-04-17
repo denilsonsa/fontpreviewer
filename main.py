@@ -156,7 +156,6 @@ tr.second {
     html_file.write("</tbody>\n\n</table>\n\n</body></html>\n")
 
 
-
 def print_help():
     print "Usage: %s [opts] <ttf font files>" % os.path.basename(sys.argv[0])
     print "Options:"
@@ -178,6 +177,58 @@ def print_help():
     print "encountered)."
 
 
+class ProgramOptions(object):
+    """Holds the program options, after they are parsed by parse_options()"""
+
+    def __init__(self):
+        self.text = "The Quick Brown Fox Jumped Over The Lazy Dog."
+        self.fontsize = 48
+        self.antialias = True
+        self.output_html = False
+        self.output_html_filename = ""
+        self.args = []
+
+
+def parse_options(argv, opt):
+    """argv should be sys.argv[1:]
+    opt should be an instance of ProgramOptions()"""
+
+    try:
+        opts, args = getopt.getopt(
+            argv,
+            "s:t:aAho:",
+            ["size=", "text=", "help", "output="]
+        )
+    except getopt.GetoptError as e:
+        sys.stderr.write(str(e) + "\n")
+        sys.stderr.write("Use --help for usage instructions.\n")
+        sys.exit(2)
+
+    for o, v in opts:
+        if o in ("-s", "--size"):
+            opt.fontsize = int(v)
+        elif o == "-a":
+            opt.antialias = True
+        elif o == "-A":
+            opt.antialias = False
+        elif o in ("-t", "--text"):
+            opt.text = v
+        elif o in ("-o", "--output") and HAS_FONTTOOLS:
+            opt.output_html = True
+            opt.output_html_filename = v
+        elif o in ("-h", "--help"):
+            print_help()
+            sys.exit(0)
+        else:
+            print "Invalid parameter: {0}".format(o)
+            print "Use --help for usage instructions."
+            sys.exit(2)
+
+    opt.args = args
+    if len(args) == 0:
+        sys.stderr.write("No files. Use --help for usage instructions.\n")
+        sys.exit(2)
+
 
 def main():
     pygame.init()
@@ -186,68 +237,35 @@ def main():
         sys.stderr.write("pygame.font has not been initialized. Do you have SDL_ttf?\n")
         sys.exit(1)
 
-    text = "The Quick Brown Fox Jumped Over The Lazy Dog."
-    fontsize = 48
-    antialias = True
-    output_html = False
-    output_html_filename = ""
-
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],"s:t:aAho:",["help"])
-    except getopt.GetoptError, e:
-        sys.stderr.write("Error while parsing parameters: %s\n" % e)
-        sys.stderr.write("Use -h to print help.\n")
-        sys.exit(2)
-
-    for o,v in opts:
-        if o == "-s":
-            fontsize = int(v)
-        elif o == "-a":
-            antialias = True
-        elif o == "-A":
-            antialias = False
-        elif o == "-t":
-            text = v
-        elif o == "-o" and HAS_FONTTOOLS:
-            output_html = True
-            output_html_filename = v
-        elif o in ("-h", "--help"):
-            print_help()
-            sys.exit(0)
-
-    if len(args) == 0:
-        sys.stderr.write("No files. Use -h to print help.\n")
-        sys.exit(3)
+    opt = ProgramOptions()
+    parse_options(sys.argv[1:], opt)
 
     metadata = []
 
-    for f in args:
+    for f in opt.args:
         try:
-            render_font_to_file(f, text, fontsize, antialias)
-            if output_html:
+            render_font_to_file(f, opt.text, opt.fontsize, opt.antialias)
+            if opt.output_html:
                 try:
                     metadata.append(FontMetadata(f))
-                except Exception, e:
-                    sys.stderr.write("Exception while getting metadata for '%s': %s\n" % (f, e))
-        except pygame.error, e:
-            sys.stderr.write("Error while rendering '%s': %s\n" % (f, e))
-        except IOError, e:
-            sys.stderr.write("IOError while loading '%s': %s\n" % (f, e))
+                except Exception as e:
+                    sys.stderr.write("Exception while getting metadata for '%s': %s\n" % (f, repr(e)))
+        except Exception as e:
+            sys.stderr.write("Exception while rendering '%s': %s\n" % (f, repr(e)))
 
-
-    if output_html:
+    if opt.output_html:
         try:
-            if output_html_filename == '-':
+            if opt.output_html_filename == '-':
                 output_html_file = sys.stdout
             else:
-                output_html_file = open(output_html_filename, "w")
+                output_html_file = open(opt.output_html_filename, "w")
 
-            print_html(metadata, output_html_file, text)
+            print_html(metadata, output_html_file, opt.text)
 
-            if output_html_filename != '-':
+            if opt.output_html_filename != '-':
                 output_html_file.close()
-        except IOError, e:
-            sys.stderr.write("IOError while writing '%s': %s\n" % (output_html_filename, e))
+        except IOError as e:
+            sys.stderr.write("IOError while writing '%s': %s\n" % (opt.output_html_filename, e))
 
 
 if __name__ == '__main__':
