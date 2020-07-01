@@ -91,7 +91,7 @@ def print_html(metadata, html_file, text=u''):
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="Generator" content="fontpreviewer http://bitbucket.org/denilsonsa/fontpreviewer">
+<meta name="Generator" content="fontpreviewer https://github.com/denilsonsa/fontpreviewer">
 <title>Font list</title>
 <style type="text/css">
 html, body {
