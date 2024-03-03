@@ -66,7 +66,7 @@ class FontMetadata(object):
             self.italic = False
 
 
-def print_html(metadata, html_file, text=u''):
+def print_html(metadata, html_file, text=''):
     def html(s):
         s = (s
             .replace('&', '&amp;')
@@ -74,7 +74,7 @@ def print_html(metadata, html_file, text=u''):
             .replace('>', '&gt;')
             .replace('"', '&quot;')
         )
-        if isinstance(s, unicode):
+        if isinstance(s, str):
             s = s.encode('utf-8', 'replace')
         elif isinstance(s, str):
             pass
@@ -165,30 +165,30 @@ tr.second {
 
 
 def print_help():
-    print "Usage: {0} [opts] <ttf font files>".format(os.path.basename(sys.argv[0]))
-    print "Options:"
-    print "  -s 48    Sets the font size (height) in pixels. (default=48)"
-    print "  -a       Enables anti-aliasing. (default)"
-    print "  -A       Disables anti-aliasing."
-    print "  -t text  Defines the text to be used when rendering the font."
-    print "           (default=The Quick Brown Fox Jumped Over The Lazy Dog.)"
+    print("Usage: {0} [opts] <ttf font files>".format(os.path.basename(sys.argv[0])))
+    print("Options:")
+    print("  -s 48    Sets the font size (height) in pixels. (default=48)")
+    print("  -a       Enables anti-aliasing. (default)")
+    print("  -A       Disables anti-aliasing.")
+    print("  -t text  Defines the text to be used when rendering the font.")
+    print("           (default=The Quick Brown Fox Jumped Over The Lazy Dog.)")
     if HAS_FONTTOOLS:
-        print "  -o file  Writes a HTML page linking to all PNG images and including actual"
-        print "           font names. (use '-' to output to stdout)"
-    print "  -h       Prints this help."
-    print ""
-    print "This program will render each TTF file into a PNG file (in the same directory"
-    print "of the TTF file)."
-    print ""
-    print "This program will ignore (skip) invalid files (but will report all errors"
-    print "encountered)."
+        print("  -o file  Writes a HTML page linking to all PNG images and including actual")
+        print("           font names. (use '-' to output to stdout)")
+    print("  -h       Prints this help.")
+    print("")
+    print("This program will render each TTF file into a PNG file (in the same directory")
+    print("of the TTF file).")
+    print("")
+    print("This program will ignore (skip) invalid files (but will report all errors")
+    print("encountered).")
 
 
 class ProgramOptions(object):
     """Holds the program options, after they are parsed by parse_options()"""
 
     def __init__(self):
-        self.text = u'The Quick Brown Fox Jumped Over The Lazy Dog.'
+        self.text = 'The Quick Brown Fox Jumped Over The Lazy Dog.'
         self.fontsize = 48
         self.antialias = True
         self.output_html = False
@@ -227,8 +227,8 @@ def parse_options(argv, opt):
             print_help()
             sys.exit(0)
         else:
-            print 'Invalid parameter: {0}'.format(o)
-            print 'Use --help for usage instructions.'
+            print('Invalid parameter: {0}'.format(o))
+            print('Use --help for usage instructions.')
             sys.exit(2)
 
     opt.args = args

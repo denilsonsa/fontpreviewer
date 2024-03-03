@@ -8,7 +8,7 @@ directory with the fonts.
 
 Requirements:
 - Python
-  - Version 2.6 or 2.7 (maybe other versions too)
+  - Version 3
 - SDL and SDL_ttf
   - Tested with libsdl-1.2.13 and sdl-ttf-2.0.10
 - pygame compiled with font support (SDL_ttf)
