@@ -16,3 +16,8 @@ It supports TTF, OTF (OpenType), and [any fonts supported by `pygame.freetype`](
     * pygame requires `SDL` and `FreeType`.
 * [fonttools](https://github.com/fonttools/fonttools)
     * Optional, but recommended.
+
+## TODO
+
+* [ ] Rewrite the argument parsing routine to use the modern `argparse` module instead of `getopt`.
+* [ ] [Support multi-line `--text`](https://stackoverflow.com/q/42014195)

@@ -218,7 +218,7 @@ def parse_options(argv, opt):
         elif o == '-A':
             opt.antialias = False
         elif o in ('-t', '--text'):
-            opt.text = v.decode('utf-8')
+            opt.text = v
         elif o in ('-o', '--output'):
             opt.output_html = True
             opt.output_html_filename = v
