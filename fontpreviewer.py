@@ -10,7 +10,7 @@ import sys
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 import pygame
-from pygame.font import Font
+from pygame.freetype import Font
 
 try:
     from fontTools import ttLib
@@ -26,16 +26,10 @@ if HAS_FONTTOOLS:
     import ttfquery_describe as describe
 
 
-def render_font_to_file(fontfile, text, fontsize, antialias=True, background=None):
+def render_font_to_file(fontfile, text, fontsize, antialias=True):
     font = Font(fontfile, fontsize)
-
-    # Despite what the documentation implies, Font.render() does not support
-    # None as the "background" parameter. You must either omit it, or pass a
-    # RGBA tuple.
-    if background == None:
-        surf = font.render(text, antialias, (0,0,0))
-    else:
-        surf = font.render(text, antialias, (0,0,0), background)
+    font.antialiased=antialias
+    surf, rect = font.render(text)
 
     pngfile = os.path.splitext(fontfile)[0] + '.png'
     pygame.image.save(surf, pngfile)
@@ -160,9 +154,9 @@ tr.second {
 
 
 def print_help():
-    print("Usage: {0} [opts] <ttf font files>".format(os.path.basename(sys.argv[0])))
+    print("Usage: {0} [opts] <font files>".format(os.path.basename(sys.argv[0])))
     print("Options:")
-    print("  -s 48    Sets the font size (height) in pixels. (default=48)")
+    print("  -s 48    Sets the font size (height). (default=48)")
     print("  -a       Enables anti-aliasing. (default)")
     print("  -A       Disables anti-aliasing.")
     print("  -t text  Defines the text to be used when rendering the font.")
@@ -172,8 +166,8 @@ def print_help():
         print("           font names. (use '-' to output to stdout)")
     print("  -h       Prints this help.")
     print("")
-    print("This program will render each TTF file into a PNG file (in the same directory")
-    print("of the TTF file).")
+    print("This program will render each font file into a PNG file (in the same directory")
+    print("of the font file).")
     print("")
     print("This program will ignore (skip) invalid files (but will report all errors")
     print("encountered).")
@@ -235,8 +229,8 @@ def parse_options(argv, opt):
 def main():
     pygame.init()
 
-    if not (pygame.font and pygame.font.get_init()):
-        sys.stderr.write('pygame.font has not been initialized. Do you have SDL_ttf?\n')
+    if not (pygame.freetype and pygame.freetype.get_init()):
+        sys.stderr.write('ERROR: pygame.freetype has not been initialized.\n')
         sys.exit(1)
 
     opt = ProgramOptions()
