@@ -64,6 +64,7 @@ def process_font(filename, text, fontsize, antialias=True):
         'filename': filename,
         'path': font.path,  # Should be equivalent to filename.
         'name': font.name,  # ← This is actually the family name.
+        #'style_name': font.style_name,  # ← This is the subfamily name. New in pygame-ce.
         'family_name': family_name,  # Str or None.
         'subfamily_name': subfamily_name,  # Str or None.
         'full_name': full_name,  # Str or None.
