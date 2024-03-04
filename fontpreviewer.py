@@ -87,13 +87,16 @@ html, body {
     color: black;
 }
 table {
-    border: 3px solid black;
+    --border-color: #a0a0a0;
+    --thick-border: 2px solid var(--border-color);
+    --thin-border: 1px solid var(--border-color);
+    border: var(--thick-border);
     margin: 0;
     padding: 0;
     border-collapse: collapse;
 }
 td, th {
-    border: 1px solid black;
+    border: var(--thin-border);
     margin: 0;
     padding: 0 2px;
     white-space: pre;
@@ -109,10 +112,13 @@ td {
     text-align: left;
 }
 tr.first {
-    border-top: 3px solid black;
+    border-top: var(--thick-border);
 }
 tr.second {
-    border-bottom: 3px solid black;
+    border-bottom: var(--thick-border);
+}
+table a {
+    text-decoration: none;
 }
 </style>
 </head><body>
