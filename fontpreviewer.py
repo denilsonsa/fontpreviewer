@@ -2,8 +2,12 @@
 # -*- coding: us-ascii -*-
 
 import getopt
+import os
 import os.path
 import sys
+
+# https://github.com/pygame/pygame/issues/1468
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 import pygame
 from pygame.font import Font
