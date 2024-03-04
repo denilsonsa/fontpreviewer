@@ -20,4 +20,5 @@ It supports TTF, OTF (OpenType), and [any fonts supported by `pygame.freetype`](
 ## TODO
 
 * [ ] Rewrite the argument parsing routine to use the modern `argparse` module instead of `getopt`.
+* [ ] Add argument to write the PNG files to a specific directory, avoiding the need for write-permission on the fonts directory.
 * [ ] [Support multi-line `--text`](https://stackoverflow.com/q/42014195), consider [migrating from pygame to pygame-ce](https://github.com/pygame-community/pygame-ce/issues/2735).
