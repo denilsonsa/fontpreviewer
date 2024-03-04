@@ -230,10 +230,10 @@ def weightName( number ):
     number = int(number) or 400
     if number in WEIGHT_NUMBERS:
         return WEIGHT_NUMBERS[number]
-    name = 'thin-'
+    name = ['thin-']
     for x in range(100,1000, 100):
         if number >= x:
-            name = WEIGHT_NUMBERS[x]+'+'
+            name = [s+'+' for s in WEIGHT_NUMBERS[x]]
     return name
 
 def family( font ):

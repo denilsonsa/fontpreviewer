@@ -31,6 +31,10 @@ def render_font_to_file(fontfile, text, fontsize, antialias=True):
     font.antialiased=antialias
     surf, rect = font.render(text)
 
+    if rect.width == 0 or rect.height == 0:
+        # I should use a proper exception class, not the generic Exception.
+        raise Exception("Font rendered to a zero-sized image.")
+
     pngfile = os.path.splitext(fontfile)[0] + '.png'
     pygame.image.save(surf, pngfile)
 
