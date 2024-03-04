@@ -18,64 +18,68 @@ try:
 except ImportError:
     HAS_FONTTOOLS = False
 
-if HAS_FONTTOOLS:
-    # TTFQuery project is abandoned and doesn't run/install anymore on recent
-    # Python versions. Thankfully, I only need one file from that project, so
-    # I've copied that file from that project into this project.
-    # from ttfquery import describe
-    import ttfquery_describe as describe
 
-
-def render_font_to_file(fontfile, text, fontsize, antialias=True):
-    font = Font(fontfile, fontsize)
+def process_font(filename, text, fontsize, antialias=True):
+    font = Font(filename, fontsize)
     font.antialiased=antialias
     surf, rect = font.render(text)
 
     if rect.width == 0 or rect.height == 0:
-        # I should use a proper exception class, not the generic Exception.
-        raise Exception("Font rendered to a zero-sized image.")
+        png_filename = ''
+        sys.stderr.write("Font '{0}' rendered to a zero-sized image.\n".format(filename))
+    else:
+        png_filename = os.path.splitext(filename)[0] + '.png'
+        pygame.image.save(surf, png_filename)
 
-    pngfile = os.path.splitext(fontfile)[0] + '.png'
-    pygame.image.save(surf, pngfile)
+    family_name = None
+    subfamily_name = None
+    full_name = None
+    weight = None
+    italic = None
+    num_glyphs = None
+    if HAS_FONTTOOLS:
+        ttfont = ttLib.TTFont(filename)
+        num_glyphs = ttfont['maxp'].numGlyphs
+        family_name = ttfont['name'].getBestFamilyName()
+        subfamily_name = ttfont['name'].getBestSubFamilyName()
+        full_name = ttfont['name'].getBestFullName()
+        # This logic is based on TTFQuery:
+        # https://pypi.org/project/TTFQuery/#files
+        # https://ttfquery.sourceforge.net/
+        # https://sourceforge.net/projects/ttfquery/files/ttfquery/
+        weight = ttfont['OS/2'].usWeightClass  # Integer.
+        italic = ttfont['OS/2'].fsSelection & 1 or ttfont['head'].macStyle & 2  # Boolean.
+        # Weight numbers:
+        # 100 thin
+        # 200 extralight, ultralight
+        # 300 light
+        # 400 normal, regular, plain
+        # 500 medium
+        # 600 semibold, demibold
+        # 700 bold
+        # 800 extrabold, ultrabold
+        # 900 black, heavy
 
-
-class FontMetadata(object):
-    def __init__(self,fontfile):
-        if not HAS_FONTTOOLS:
-            return
-        # describe.shortName(font)
-        #   This will return (font_name, font_family), like this:
-        #   ("MyFont Bold Italic","MyFont")
-        #   ("MyFont","MyFont")
-        # describe.family(font)
-        #   This will return the font families based on some internal integer.
-        #   For "Arial Unicode MS", it returns ("SANS","GOTHIC-NEO-GROTESQUE").
-        #   For many thirdy-party fonts, it returns ("ANY","ANY").
-        # describe.modifiers(font)
-        #   This returns two integers (weight,italic).
-        #   The first one is font weight [100..900]. The second one is 0 or 1.
-        # describe.weightName(number)
-        #   This converts the font weight number into a name (like normal, bold).
-
-        font = ttLib.TTFont(fontfile)
-        short_name = describe.shortName(font)
-        family = describe.family(font)
-        modifiers = describe.modifiers(font)
-
-        self.filename = fontfile
-        self.name = short_name[0]
-        self.name_family = short_name[1]
-        self.family = '/'.join(family)
-        self.weight = modifiers[0]
-        self.weight_name = describe.weightName(modifiers[0])
-        if modifiers[1]:
-            self.italic = True
-        else:
-            self.italic = False
+    return {
+        'filename': filename,
+        'path': font.path,  # Should be equivalent to filename.
+        'name': font.name,  # ← This is actually the family name.
+        'family_name': family_name,  # Str or None.
+        'subfamily_name': subfamily_name,  # Str or None.
+        'full_name': full_name,  # Str or None.
+        'num_glyphs': num_glyphs,  # Integer or None.
+        'monospace': 'monospace' if font.fixed_width else '',  # Boolean.
+        'scalable': 'scalable' if font.scalable else 'bitmap',  # Boolean. Most modern fonts are.
+        'weight': weight,  # Integer or None.
+        'italic': 'Italic' if italic else '',  # Boolean or None.
+        'img_filename': png_filename,
+        'img_width': rect.width,
+        'img_height': rect.height,
+    }
 
 
 def print_html(metadata, html_file, text=''):
-    escape = lambda text: html.escape(text, quote=True)
+    escape = lambda text: html.escape(str(text), quote=True) if text is not None else ''
 
     text = escape(text)
 
@@ -105,9 +109,6 @@ td, th {
     padding: 0 2px;
     white-space: pre;
 }
-td[rowspan="2"] {
-    padding: 0;
-}
 th {
     font-weight: normal;
     text-align: left;
@@ -129,38 +130,38 @@ table a {
 ''')
 
     html_file.write('<table>\n\n'
-        '<!--<thead>\n'
-        '<tr class="first"><th colspan="3">Font name</th><th rowspan="2">{text}</th></tr>\n'
-        '<tr class="second"><th>filename</th><th>weight</th><th>italic</th></tr>\n'
-        '</thead>-->\n\n'
         '<tbody>\n\n'.format(
             text=text
         )
     )
 
-    for e in metadata:
-        pngfilename = os.path.splitext(e.filename)[0] + '.png'
-        italic = 'Italic' if e.italic else ''
-
+    for item in metadata:
+        escaped_item = { k: escape(v) for (k, v) in item.items() }
+        if HAS_FONTTOOLS:
+            escaped_item['num_glyphs'] = '{num_glyphs}<br>glyphs'.format(**escaped_item)
+            name_as_html = '<th><b>{family_name}</b></th> <td>{subfamily_name}</td>'.format(**escaped_item)
+        else:
+            name_as_html = '<th><b>{name}</b><th> <td></td>'.format(**escaped_item)
         html_file.write(
             '<tr class="first">'
-            '<td colspan="3">{name}</td>'
-            '<td rowspan="2"><img src="{pngfilename}" alt="" title="{filename} - {name}"></td>'
+            '  {name_as_html}'
+            '  <td rowspan="2">{num_glyphs}</td>'
+            #'  <td rowspan="2">{scalable}</td>'
+            '  <td rowspan="2">{monospace}</td>'
+            '  <td rowspan="2">{weight}</td>'
+            '  <td rowspan="2">{italic}</td>'
+            '  <td rowspan="2"><img src="{img_filename}" alt="" title="{filename} - {name}" width="{img_width}" height="{img_height}"></td>'
             '</tr>\n'
             '<tr class="second">'
-            '<td><a href="{filename}">{filename}</a></td><td title="{weight_name}">{weight}</td><td>{italic}</td>'
+            '  <td colspan="2"><a href="{filename}">{filename}</a></td>'
             '</tr>\n\n'.format(
-                name=escape(e.name),
-                filename=escape(e.filename),
-                pngfilename=escape(pngfilename),
-                weight=str(e.weight),
-                weight_name=escape(', '.join(e.weight_name)),
-                italic=italic,
-                text=text
+                text=text,
+                name_as_html=name_as_html,
+                **escaped_item
             )
         )
 
-    html_file.write('</tbody>\n\n</table>\n\n</body>\n</html>\n')
+    html_file.write('</tbody>\n</table>\n\n</body>\n</html>\n')
 
 
 def print_help():
@@ -171,9 +172,8 @@ def print_help():
     print("  -A       Disables anti-aliasing.")
     print("  -t text  Defines the text to be used when rendering the font.")
     print("           (default=The Quick Brown Fox Jumped Over The Lazy Dog.)")
-    if HAS_FONTTOOLS:
-        print("  -o file  Writes a HTML page linking to all PNG images and including actual")
-        print("           font names. (use '-' to output to stdout)")
+    print("  -o file  Writes a HTML page linking to all PNG images and including actual")
+    print("           font names. (use '-' to output to stdout)")
     print("  -h       Prints this help.")
     print("")
     print("This program will render each font file into a PNG file (in the same directory")
@@ -219,7 +219,7 @@ def parse_options(argv, opt):
             opt.antialias = False
         elif o in ('-t', '--text'):
             opt.text = v.decode('utf-8')
-        elif o in ('-o', '--output') and HAS_FONTTOOLS:
+        elif o in ('-o', '--output'):
             opt.output_html = True
             opt.output_html_filename = v
         elif o in ('-h', '--help'):
@@ -250,14 +250,9 @@ def main():
 
     for f in opt.args:
         try:
-            render_font_to_file(f, opt.text, opt.fontsize, opt.antialias)
-            if opt.output_html:
-                try:
-                    metadata.append(FontMetadata(f))
-                except Exception as e:
-                    sys.stderr.write("Exception while getting metadata for '{0}': {1}\n".format(f, repr(e)))
+            metadata.append(process_font(f, opt.text, opt.fontsize, opt.antialias))
         except Exception as e:
-            sys.stderr.write("Exception while rendering '{0}': {1}\n".format(f, repr(e)))
+            sys.stderr.write("Exception while processing '{0}': {1}\n".format(f, repr(e)))
 
     if opt.output_html:
         try:
