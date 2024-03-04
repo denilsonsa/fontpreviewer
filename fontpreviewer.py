@@ -144,12 +144,13 @@ tr.second {
             '<td rowspan="2"><img src="{pngfilename}" alt="" title="{filename} - {name}"></td>'
             '</tr>\n'
             '<tr class="second">'
-            '<td>{filename}</td><td>{weight}</td><td>{italic}</td>'
+            '<td><a href="{filename}">{filename}</a></td><td title="{weight_name}">{weight}</td><td>{italic}</td>'
             '</tr>\n\n'.format(
                 name=escape(e.name),
                 filename=escape(e.filename),
                 pngfilename=escape(pngfilename),
                 weight=str(e.weight),
+                weight_name=escape(', '.join(e.weight_name)),
                 italic=italic,
                 text=text
             )
