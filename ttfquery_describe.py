@@ -1,14 +1,67 @@
+# describe.py is copied from TTFQuery-1.0.5:
+# https://pypi.org/project/TTFQuery/#files
+#
+# Upstream website is abandoned and doesn't even have the 1.0.5 version:
+# https://ttfquery.sourceforge.net/
+# https://sourceforge.net/projects/ttfquery/files/ttfquery/
+
+# This file was modified from the upstream version to port it from Python 2 to
+# Python 3. Look at the git history to see the changes.
+
+# TTFQuery (and thus this file) is licensed under the simplified BSD license:
+#
+# THIS SOFTWARE IS NOT FAULT TOLERANT AND SHOULD NOT BE USED IN ANY
+# SITUATION ENDANGERING HUMAN LIFE OR PROPERTY.
+#
+# TTFQuery License
+#
+# 	Copyright (c) 2003, Michael C. Fletcher and Contributors
+# 	All rights reserved.
+#
+# 	Redistribution and use in source and binary forms, with or without
+# 	modification, are permitted provided that the following conditions
+# 	are met:
+#
+# 		Redistributions of source code must retain the above copyright
+# 		notice, this list of conditions and the following disclaimer.
+#
+# 		Redistributions in binary form must reproduce the above
+# 		copyright notice, this list of conditions and the following
+# 		disclaimer in the documentation and/or other materials
+# 		provided with the distribution.
+#
+# 		The name of Michael C. Fletcher, or the name of any Contributor,
+# 		may not be used to endorse or promote products derived from this
+# 		software without specific prior written permission.
+#
+# 	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# 	``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# 	LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# 	FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# 	COPYRIGHT HOLDERS AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# 	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# 	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# 	SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# 	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# 	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# 	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+# 	OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
 """Extract meta-data from a font-file to describe the font"""
 from fontTools import ttLib
 import sys
-try:
-    from OpenGLContext.debug.logs import text_log
-except ImportError:
-    text_log = None
+
+# Modification from upstream code: don't even try loading OpenGLContext.
+#try:
+#    from OpenGLContext.debug.logs import text_log
+#except ImportError:
+#    text_log = None
+text_log = None
 
 def openFont( filename ):
     """Get a new font object"""
-    if isinstance( filename, (str,unicode)):
+    if isinstance( filename, str):
         filename = open( filename, 'rb')
     return ttLib.TTFont(filename)
 
@@ -20,15 +73,23 @@ def shortName( font ):
     family = ""
     for record in font['name'].names:
         if record.nameID == FONT_SPECIFIER_NAME_ID and not name:
-            if '\000' in record.string:
-                name = unicode(record.string, 'utf-16-be').encode('utf-8')
+            if b'\000' in record.string:
+                # Modification from upstream code: return str instead of bytes.
+                #name = str(record.string, 'utf-16-be').encode('utf-8')
+                name = str(record.string, 'utf-16-be')
             else:
-                name = record.string
+                # Modification from upstream code: return str instead of bytes.
+                #name = record.string
+                name = str(record.string, 'utf-8')
         elif record.nameID == FONT_SPECIFIER_FAMILY_ID and not family:
-            if '\000' in record.string:
-                family = unicode(record.string, 'utf-16-be').encode('utf-8')
+            if b'\000' in record.string:
+                # Modification from upstream code: return str instead of bytes.
+                #family = str(record.string, 'utf-16-be').encode('utf-8')
+                family = str(record.string, 'utf-16-be')
             else:
-                family = record.string
+                # Modification from upstream code: return str instead of bytes.
+                #family = record.string
+                family = str(record.string, 'utf-8')
         if name and family:
             break
     return name, family
@@ -149,7 +210,7 @@ for key,value in WEIGHT_NAMES.items():
 
 def weightNumber( name ):
     """Convert a string-name to a weight number compatible with this module"""
-    if isinstance( name, (str,unicode)):
+    if isinstance( name, str):
         name = name.lower()
         name = name.replace( '-','').replace(' ','')
         if name and name[-1] == '+':
@@ -167,7 +228,7 @@ def weightNumber( name ):
 def weightName( number ):
     """Convert integer number to a human-readable weight-name"""
     number = int(number) or 400
-    if WEIGHT_NUMBERS.has_key( number ):
+    if number in WEIGHT_NUMBERS:
         return WEIGHT_NUMBERS[number]
     name = 'thin-'
     for x in range(100,1000, 100):
@@ -214,76 +275,7 @@ def modifiers( font ):
         ),
     )
 
-def guessEncoding( font, given=None ):
-    """Attempt to guess/retrieve an encoding from the font itself
-
-    Basically this will try to get the given encoding
-    (unless it is None).
-
-    If given is a single integer or a single-item tuple,
-    we will attempt scan looking for any table matching
-    given as the platform ID and returning the first sub
-    table.
-
-    If given is a two-value tuple, we will require
-    explicit matching, and raise errors if the encoding
-    cannot be retrieved.
-
-    if given is None, we will return the first encoding
-    in the font.
-
-    XXX This needs some work, particularly for non-win32
-        platforms, where there is no preference embodied
-        for the native encoding.
-    """
-    if isinstance( given, tuple) and given:
-        if len(given) == 2:
-            if __debug__:
-                if text_log:
-                    text_log.info(
-                        """Checking for explicitly required encoding %r""",
-                        given
-                    )
-            if not font['cmap'].getcmap( *given ):
-                raise ValueError(
-                    """The specified font encoding %r does not appear to be available within the font %r. Available encodings: %s"""% (
-                        given, shortName(font),
-                        [
-                            (table.platformID,table.platEncID)
-                            for table in font['cmap'].tables
-                        ],
-                    )
-                )
-            return given
-        elif len(given) > 2:
-            raise TypeError("""Encoding must be None, a two-tuple, or an integer, got %r"""%(given,))
-        else:
-            # treat as a single integer, regardless of number of integer's
-            given = given[0]
-    if isinstance( given, (int, long)):
-        for table in font['cmap'].tables:
-            if table.platformID == given:
-                return (table.platformID, table.platEncID)
-        raise ValueError(
-            """Could not find encoding with specified platformID==%s within the font %r. Available encodings: %s"""% (
-                given, shortName(font),
-                [
-                    (table.platformID,table.platEncID)
-                    for table in font['cmap'].tables
-                ],
-            )
-        )
-    if sys.platform == 'win32':
-        prefered = (3,1)
-        # should have prefered values for Linux and Mac as well...
-        for table in font['cmap'].tables:
-            if (table.platformID, table.platEncID) == prefered:
-                return prefered
-    # just retrieve the first table's values
-    for table in font['cmap'].tables:
-        return (table.platformID, table.platEncID)
-    raise ValueError(
-        """There are no encoding tables within the font %r, likely a corrupt font-file"""% (
-            shortName(font),
-        )
-    )
+# REMOVED guessEncoding( font, given=None ) function
+# It was unused.
+# It wasn't "complete", as the docstring said:
+#   "This needs some work, particularly for non-win32 platforms"

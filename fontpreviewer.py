@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: us-ascii -*-
 
 import getopt
+import html
 import os
 import os.path
 import sys
@@ -14,10 +14,16 @@ from pygame.font import Font
 
 try:
     from fontTools import ttLib
-    from ttfquery import describe
     HAS_FONTTOOLS = True
 except ImportError:
     HAS_FONTTOOLS = False
+
+if HAS_FONTTOOLS:
+    # TTFQuery project is abandoned and doesn't run/install anymore on recent
+    # Python versions. Thankfully, I only need one file from that project, so
+    # I've copied that file from that project into this project.
+    # from ttfquery import describe
+    import ttfquery_describe as describe
 
 
 def render_font_to_file(fontfile, text, fontsize, antialias=True, background=None):
@@ -71,25 +77,9 @@ class FontMetadata(object):
 
 
 def print_html(metadata, html_file, text=''):
-    def html(s):
-        s = (s
-            .replace('&', '&amp;')
-            .replace('<', '&lt;')
-            .replace('>', '&gt;')
-            .replace('"', '&quot;')
-        )
-        if isinstance(s, str):
-            s = s.encode('utf-8', 'replace')
-        elif isinstance(s, str):
-            pass
-        else:
-            raise ValueError(
-                'What kind of type is this? type(s)={0} repr(s)={1}'
-                .format(type(s), repr(s))
-            )
-        return s
+    escape = lambda text: html.escape(text, quote=True)
 
-    text = html(text)
+    text = escape(text)
 
     html_file.write('''<!DOCTYPE html>
 <html>
@@ -156,9 +146,9 @@ tr.second {
             '<tr class="second">'
             '<td>{filename}</td><td>{weight}</td><td>{italic}</td>'
             '</tr>\n\n'.format(
-                name=html(e.name),
-                filename=html(e.filename),
-                pngfilename=html(pngfilename),
+                name=escape(e.name),
+                filename=escape(e.filename),
+                pngfilename=escape(pngfilename),
                 weight=str(e.weight),
                 italic=italic,
                 text=text
@@ -269,7 +259,7 @@ def main():
             if opt.output_html_filename == '-':
                 output_html_file = sys.stdout
             else:
-                output_html_file = open(opt.output_html_filename, "w")
+                output_html_file = open(opt.output_html_filename, "w", encoding="utf-8", errors="replace")
 
             print_html(metadata, output_html_file, opt.text)
 
